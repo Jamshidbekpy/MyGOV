@@ -1,6 +1,8 @@
 FROM php:8.2-apache
 
-# Production-friendly defaults
+# ===============================
+# ENV
+# ===============================
 ENV APACHE_DOCUMENT_ROOT=/var/www/html \
     PHP_OPCACHE_ENABLE=1 \
     PHP_OPCACHE_VALIDATE_TIMESTAMPS=0 \
@@ -9,30 +11,36 @@ ENV APACHE_DOCUMENT_ROOT=/var/www/html \
     PHP_OPCACHE_INTERNED_STRINGS_BUFFER=16 \
     PHP_OPCACHE_MAX_ACCELERATED_FILES=20000
 
-# Install system deps + PHP extensions used by this project (mysqli is required)
+# ===============================
+# System deps + PHP extensions
+# ===============================
 RUN set -eux; \
     apt-get update; \
     apt-get install -y --no-install-recommends \
-      libfreetype6-dev \
-      libjpeg62-turbo-dev \
-      libpng-dev \
-      libzip-dev \
-      unzip \
-    ; \
+        libfreetype6-dev \
+        libjpeg62-turbo-dev \
+        libpng-dev \
+        libzip-dev \
+        unzip; \
     docker-php-ext-configure gd --with-freetype --with-jpeg; \
     docker-php-ext-install -j"$(nproc)" mysqli gd zip; \
     a2enmod rewrite headers; \
     rm -rf /var/lib/apt/lists/*
 
-# Apache hardening-ish: avoid exposing versions (best-effort)
+# ===============================
+# Apache hardening + ServerName
+# ===============================
 RUN set -eux; \
     { \
       echo "ServerTokens Prod"; \
       echo "ServerSignature Off"; \
-    } > /etc/apache2/conf-available/security-hardening.conf; \
-    a2enconf security-hardening
+      echo "ServerName localhost"; \
+    } > /etc/apache2/conf-available/security.conf; \
+    a2enconf security
 
-# PHP production ini overrides (opcache, errors)
+# ===============================
+# PHP production ini
+# ===============================
 RUN set -eux; \
     { \
       echo "display_errors=0"; \
@@ -53,15 +61,30 @@ RUN set -eux; \
       echo "opcache.max_accelerated_files=${PHP_OPCACHE_MAX_ACCELERATED_FILES}"; \
     } > /usr/local/etc/php/conf.d/zz-production.ini
 
+# ===============================
+# App
+# ===============================
 WORKDIR /var/www/html
-
-# Copy the app code
 COPY . /var/www/html
 
-# Ensure writable cache dirs for QR/temp outputs
+# ===============================
+# Writable directories (VERY IMPORTANT)
+# ===============================
 RUN set -eux; \
-    mkdir -p /var/www/html/temp /var/www/html/qr/cache; \
-    chown -R www-data:www-data /var/www/html/temp /var/www/html/qr/cache; \
-    chmod -R 775 /var/www/html/temp /var/www/html/qr/cache
+    mkdir -p \
+        /var/www/html/temp/mpdf \
+        /var/www/html/file/download \
+        /var/www/html/vendor/mpdf/mpdf/tmp/mpdf \
+        /var/www/html/qr/cache; \
+    chown -R www-data:www-data \
+        /var/www/html/temp \
+        /var/www/html/file \
+        /var/www/html/vendor/mpdf/mpdf/tmp \
+        /var/www/html/qr; \
+    chmod -R 775 \
+        /var/www/html/temp \
+        /var/www/html/file \
+        /var/www/html/vendor/mpdf/mpdf/tmp \
+        /var/www/html/qr
 
 EXPOSE 80

@@ -8,7 +8,7 @@ services:
       db:
         condition: service_healthy
     env_file:
-      - env.example
+      - .env
     environment:
       # Ensure app connects to the MariaDB service in-compose
       MYSQL_HOST: db
@@ -20,7 +20,7 @@ services:
     image: mariadb:11.4
     container_name: mygov_db
     env_file:
-      - env.example
+      - .env
     environment:
       # MariaDB init variables
       # Use defaults so `docker compose config` works even without a local `.env`
