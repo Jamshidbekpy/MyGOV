@@ -1,0 +1,42 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: mygov_app
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - env.example
+    environment:
+      # Ensure app connects to the MariaDB service in-compose
+      MYSQL_HOST: db
+    ports:
+      - "8080:80"
+    restart: unless-stopped
+
+  db:
+    image: mariadb:11.4
+    container_name: mygov_db
+    env_file:
+      - env.example
+    environment:
+      # MariaDB init variables
+      # Use defaults so `docker compose config` works even without a local `.env`
+      MARIADB_DATABASE: ${MYSQL_DATABASE:-mygov}
+      MARIADB_USER: ${MYSQL_USER:-mygov}
+      MARIADB_PASSWORD: ${MYSQL_PASSWORD:-change_me_strong_password}
+      # MARIADB_ROOT_PASSWORD comes from env_file
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./mygov.sql:/docker-entrypoint-initdb.d/001-mygov.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "mariadb-admin ping -h 127.0.0.1 -u$$MARIADB_USER -p$$MARIADB_PASSWORD --silent"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+    restart: unless-stopped
+
+volumes:
+  db_data:

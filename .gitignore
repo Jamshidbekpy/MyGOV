@@ -1,0 +1,74 @@
+# Environment & Secrets (CRITICAL - never commit!)
+.env
+.env.local
+.env.*.local
+
+# Generated Cache & Temp Files
+cache/**/*.dat
+cache/**/*.png
+temp/**/*.png
+qr/cache/**/*.dat
+qr/cache/**/*.png
+qr/temp/**/*.png
+qr/qr-code/*.png
+
+# User Uploads (production data)
+uploude/*.pdf
+uploude/*.doc
+uploude/*.docx
+uploude/*.jpg
+uploude/*.jpeg
+uploude/*.png
+!uploude/index.php
+file/download/*.pdf
+files/download/*.pdf
+
+# IDE & Editor Files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
+*.sublime-project
+*.sublime-workspace
+
+# OS Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+logs/
+error_log
+access_log
+
+# Docker
+docker-compose.override.yml
+.dockerignore
+
+# PHP
+composer.lock
+/vendor/*/tests/
+/vendor/*/test/
+/vendor/*/Tests/
+/vendor/*/Test/
+
+# Backup files
+*.bak
+*.backup
+*.old
+*.orig
+
+# Temporary files
+*.tmp
+*.temp
+

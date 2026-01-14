@@ -22,10 +22,33 @@ Lightweight PHP/MySQL demo that mimics a portion of the my.gov.uz document porta
 4) Serve: from the repo root, run `php -S localhost:8000` and open `http://localhost:8000`.  
 5) Admin: visit `/Admin/` to log in; create a user record in the `admin` table if none exists.
 
+## Docker (production-like)
+This repo includes a production-friendly `Dockerfile` (PHP 8.2 + Apache + opcache) and a `docker-compose.yml` (app + MariaDB + volumes + healthchecks).
+
+1) Configure environment:
+- Copy `env.example` to `.env` (recommended) and change the passwords.
+- If you cannot/won't use `.env`, you can keep `env.example` and `docker-compose.yml` will read it via `env_file`.
+
+2) Start:
+- Run `docker compose up -d --build`
+- Open `http://localhost:8080`
+
+3) Database initialization:
+- On first run, MariaDB will import `mygov.sql` automatically.
+- Data is persisted in the `db_data` volume.
+
+### Environment variables
+The app reads DB credentials from env (see `mysqli_connect.php`):
+- `MYSQL_HOST` (default `localhost`)
+- `MYSQL_DATABASE` (default `mygov`)
+- `MYSQL_USER` (default `root`)
+- `MYSQL_PASSWORD` (default empty)
+
 ## Notes
 - Credentials are checked with plain SQL; change the default admin password after import and avoid exposing this demo publicly without hardening.
 - Temporary/QR cache output is stored under `temp/` and `qr/cache/`; ensure the web user can write there if you regenerate assets.
 - Vendor libraries are already committed; Composer install is optional unless you want to refresh dependencies.
+- **`.gitignore`** is included to prevent committing sensitive files (`.env`), generated cache files (`cache/`, `temp/`, `qr/cache/`), user uploads (`uploude/`), and IDE/OS files. Always review `.gitignore` before committing.
 
 ## Common Tasks
 - Add a certificate: log in via `/Admin/`, fill the “Yangi Hujjat qo'shish” form, submit to generate the record/PDF.
