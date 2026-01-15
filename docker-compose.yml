@@ -1,42 +1,60 @@
 services:
+  db:
+    image: mariadb:11.4
+    container_name: mygov_db
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      MARIADB_DATABASE: ${MYSQL_DATABASE:?MYSQL_DATABASE not set}
+      MARIADB_USER: ${MYSQL_USER:?MYSQL_USER not set}
+      MARIADB_PASSWORD: ${MYSQL_PASSWORD:?MYSQL_PASSWORD not set}
+      MARIADB_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?MYSQL_ROOT_PASSWORD not set}
+      TZ: ${TZ:-Asia/Tashkent}
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --max-connections=250
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./mygov.sql:/docker-entrypoint-initdb.d/001-mygov.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "mariadb-admin ping -h 127.0.0.1 -u$${MARIADB_USER} -p$${MARIADB_PASSWORD} --silent"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+    networks:
+      - mygov_net
+
   app:
     build:
       context: .
       dockerfile: Dockerfile
     container_name: mygov_app
+    restart: unless-stopped
     depends_on:
       db:
         condition: service_healthy
     env_file:
       - .env
     environment:
-      # Ensure app connects to the MariaDB service in-compose
       MYSQL_HOST: db
+      TZ: ${TZ:-Asia/Tashkent}
+    # 🔒 MUHIM: internetga ochmaymiz, faqat localhost
     ports:
-      - "8080:80"
-    restart: unless-stopped
+      - "127.0.0.1:8080:80"
+    networks:
+      - mygov_net
+    # loglar shishib ketmasin
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
 
-  db:
-    image: mariadb:11.4
-    container_name: mygov_db
-    env_file:
-      - .env
-    environment:
-      # MariaDB init variables
-      # Use defaults so `docker compose config` works even without a local `.env`
-      MARIADB_DATABASE: ${MYSQL_DATABASE:-mygov}
-      MARIADB_USER: ${MYSQL_USER:-mygov}
-      MARIADB_PASSWORD: ${MYSQL_PASSWORD:-change_me_strong_password}
-      # MARIADB_ROOT_PASSWORD comes from env_file
-    volumes:
-      - db_data:/var/lib/mysql
-      - ./mygov.sql:/docker-entrypoint-initdb.d/001-mygov.sql:ro
-    healthcheck:
-      test: ["CMD-SHELL", "mariadb-admin ping -h 127.0.0.1 -u$$MARIADB_USER -p$$MARIADB_PASSWORD --silent"]
-      interval: 5s
-      timeout: 3s
-      retries: 30
-    restart: unless-stopped
+networks:
+  mygov_net:
+    driver: bridge
 
 volumes:
   db_data:
