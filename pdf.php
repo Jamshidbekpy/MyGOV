@@ -97,7 +97,31 @@ $mpdf1 = new \Mpdf\Mpdf(['tempDir' => $tempMpdfDir]);
 
 /**
  * ===============================
- * 1) FIRST PDF (numbers)
+ * Disclaimers (siz bergan matnlar)
+ * ===============================
+ */
+$disclaimerEn = "This document is a copy of an electronic document generated in accordance with the
+provision on the Single Portal of Interactive Public Services, approved by the provision
+of the Cabinet of Ministers of the Republic of Uzbekistan dated September 15, 2017
+No. 728. To check the accuracy of the information specified in the copy of the
+electronic document, go to the website repo.gov.uz and enter the unique number of the
+electronic document, or scan the QR code using a mobile device. Attention! In
+accordance with the provision of the Cabinet of Ministers of the Republic of Uzbekistan
+dated September 15, 2017 No. 728, the information contained in electronic documents
+is legitimate. It is strictly forbidden for state bodies to refuse to accept copies of
+electronic documents generated on the Single Portal of Interactive Public Services.";
+
+$disclaimerRu = "Данный документ является копией электронного документа, сформированного на
+Едином портале интерактивных государственных услуг в соответствии с
+Постановлением Кабинета Министров № 728 от 15 сентября 2017 года, и отказ
+государственных органов в принятии данного документа категорически
+запрещается. Подлинность документа можно проверить, введя уникальный номер
+документа на сайте repo.gov.uz или просканировав QR-код с помощью мобильного
+телефона.";
+
+/**
+ * ===============================
+ * 1) FIRST PDF (numbers)  [EN]
  * ===============================
  */
 $infor = "<!DOCTYPE html>
@@ -127,23 +151,28 @@ if ($r && ($row = mysqli_fetch_assoc($r))) {
     $oy = (int)($row['oy'] ?? 1);
     if ($oy <= 0) $oy = 1;
 
-    // ish davrlari
-    $ib = parse_uz_date($row['ish_b'] ?? '');
+    // hujjat sanasi (dates) - anchor uchun
+    $docDt = parse_uz_date($row['dates'] ?? '') ?: new DateTime();
+    $docMonth = month_start($docDt);
 
+    // ish davrlari 1-ish
+    $ib = parse_uz_date($row['ish_b'] ?? '');
     $itRaw = trim((string)($row['ish_t'] ?? ''));
     $itIsCurrent = ($itRaw === '' || $itRaw === 'До сих пор');
-    $itDt = $itIsCurrent ? new DateTime() : (parse_uz_date($itRaw) ?? new DateTime());
+    $itDt = $itIsCurrent ? $docDt : (parse_uz_date($itRaw) ?: $docDt);
 
+    // ish davrlari 2-ish
     $ib1 = parse_uz_date($row['ish_b1'] ?? '');
     $it1Raw = trim((string)($row['ish_t1'] ?? ''));
     $it1IsCurrent = ($it1Raw === '' || $it1Raw === 'До сих пор');
-    $itDt1 = $it1IsCurrent ? new DateTime() : (parse_uz_date($it1Raw) ?? new DateTime());
+    $itDt1 = $it1IsCurrent ? $docDt : (parse_uz_date($it1Raw) ?: $docDt);
 
-    // ✅ MUHIM: anchorMonth = ish_t (yoki "До сих пор" bo'lsa hozirgi oy)
-    // hujjat sanasiga bog'lamaymiz!
-    $anchorMonth = month_start($itDt);
+    // ✅ ANCHOR LOGIKA (0 chiqmasin):
+    // Agar ish hujjat sanasidan oldin tugagan bo'lsa -> ish tugagan oydan hisobla
+    // Aks holda -> hujjat oydan hisobla
+    $anchorMonth = ($itDt < $docDt) ? month_start($itDt) : $docMonth;
 
-    // ish intervalini oy boshiga keltiramiz
+    // oy boshiga keltiramiz
     $ibM = $ib ? month_start($ib) : null;
     $itM = month_start($itDt);
 
@@ -157,7 +186,6 @@ if ($r && ($row = mysqli_fetch_assoc($r))) {
     $inforq = "";
     $mus = 0.0;
 
-    // Oxirgi $oy oy: anchorMonth dan orqaga (anchor ham kiradi)
     for ($i = 0; $i < $oy; $i++) {
         $m = (clone $anchorMonth)->modify("-$i months");
         $yil = $m->format('Y');
@@ -202,14 +230,14 @@ if ($r && ($row = mysqli_fetch_assoc($r))) {
     $mus_fmt = number_format($mus, 0, '', ' ');
     $mus_s_fmt = number_format($mus_s, 0, '', ' ');
 
-    // dates (header ko‘rsatish)
     $datess  = explode(" ", (string)($row['dates'] ?? ''));
     $datesss = $datess[0] ?? '';
 
-    // QR link -> PDF link
     $qrData = $baseUrl . "/file/download/{$numbers}.pdf";
     $qrPng  = $tempDirForQr . '/qr_' . md5($qrData) . '.png';
     QRcode::png($qrData, $qrPng);
+
+    $disclaimerEnHtml = nl2br(htmlspecialchars($disclaimerEn, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'));
 
     $infor .= "
     <br><table width='100%' style='margin-top:-20px'>
@@ -229,11 +257,7 @@ if ($r && ($row = mysqli_fetch_assoc($r))) {
         </td>
         <td width='30%' style='text-align:center'><img src='./images/th.jpg' id='gerb'></td>
         <td width='40%' style='text-align:center'>
-          The State <br>
-          Tax Committee<br>
-          of the <br>
-          Republic of <br>
-          Uzbekistan<br>
+          The State <br>Tax Committee<br>of the <br>Republic of <br>Uzbekistan<br>
         </td>
       </tr>
     </table>
@@ -286,9 +310,7 @@ if ($r && ($row = mysqli_fetch_assoc($r))) {
     <table width='100%' style='font-size:12px;'>
       <tr>
         <td width='81%' style='text-align:justify; padding-right:22px;font-size:13px'>
-          This document is a copy of an electronic document generated in accordance with the
-          provision on the Single Portal of Interactive Public Services, approved by the provision
-          of the Cabinet of Ministers of the Republic of Uzbekistan dated September 15, 2017 No. 728.
+          {$disclaimerEnHtml}
         </td>
         <td width='12%' style='font-size:40px; padding-right:15px;'>{$row['q_kod']}</td>
         <td width='8%' style='text-align:right;'>
@@ -317,7 +339,7 @@ $mpdf->Output($pdfFile1, 'F');
 
 /**
  * ===============================
- * 2) SECOND PDF (numbers1)
+ * 2) SECOND PDF (numbers1)  [RU]
  * ===============================
  */
 $infor11 = "<!DOCTYPE html>
@@ -340,6 +362,7 @@ $infor11 = "<!DOCTYPE html>
 
 $query2 = "SELECT * FROM hujjat WHERE numbers1='$numbers11' LIMIT 1";
 $r2 = mysqli_query($dbc, $query2);
+
 if ($r2 && ($row2 = mysqli_fetch_assoc($r2))) {
 
     $datess  = explode(" ", (string)($row2['dates'] ?? ''));
@@ -348,6 +371,8 @@ if ($r2 && ($row2 = mysqli_fetch_assoc($r2))) {
     $qrData2 = $baseUrl . "/file/download/{$numbers11}.pdf";
     $qrPng2  = $tempDirForQr . '/qr_' . md5($qrData2) . '.png';
     QRcode::png($qrData2, $qrPng2);
+
+    $disclaimerRuHtml = nl2br(htmlspecialchars($disclaimerRu, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'));
 
     $infor11 .= "
     <br><table width='100%' style='margin-top:-20px'>
@@ -442,7 +467,7 @@ if ($r2 && ($row2 = mysqli_fetch_assoc($r2))) {
     <table width='100%' style='font-size:12px;'>
       <tr>
         <td width='81%' style='text-align:justify; padding-right:22px;font-size:13px'>
-          Данный документ является копией электронного документа...
+          {$disclaimerRuHtml}
         </td>
         <td width='12%' style='font-size:40px; padding-right:15px;'>{$row2['q_kod1']}</td>
         <td width='8%' style='text-align:right;'>
@@ -515,4 +540,3 @@ window.onload = function(){ document.getElementById('button1').click(); };
 </script>";
 
 exit;
-
