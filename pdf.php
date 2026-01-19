@@ -100,24 +100,8 @@ $mpdf1 = new \Mpdf\Mpdf(['tempDir' => $tempMpdfDir]);
  * Disclaimers (siz bergan matnlar)
  * ===============================
  */
-$disclaimerEn = "This document is a copy of an electronic document generated in accordance with the
-provision on the Single Portal of Interactive Public Services, approved by the provision
-of the Cabinet of Ministers of the Republic of Uzbekistan dated September 15, 2017
-No. 728. To check the accuracy of the information specified in the copy of the
-electronic document, go to the website repo.gov.uz and enter the unique number of the
-electronic document, or scan the QR code using a mobile device. Attention! In
-accordance with the provision of the Cabinet of Ministers of the Republic of Uzbekistan
-dated September 15, 2017 No. 728, the information contained in electronic documents
-is legitimate. It is strictly forbidden for state bodies to refuse to accept copies of
-electronic documents generated on the Single Portal of Interactive Public Services.";
 
-$disclaimerRu = "Данный документ является копией электронного документа, сформированного на
-Едином портале интерактивных государственных услуг в соответствии с
-Постановлением Кабинета Министров № 728 от 15 сентября 2017 года, и отказ
-государственных органов в принятии данного документа категорически
-запрещается. Подлинность документа можно проверить, введя уникальный номер
-документа на сайте repo.gov.uz или просканировав QR-код с помощью мобильного
-телефона.";
+
 
 /**
  * ===============================
@@ -199,12 +183,12 @@ if ($r && ($row = mysqli_fetch_assoc($r))) {
             $summa_so_fmt = number_format($summaq * 0.12, 0, '', ' ');
 
             $inforq .= "<tr style='text-align:center'>
-              <td>{$yil}</td>
-              <td>{$oyNomi}</td>
-              <td>{$row['ish_joyi']}</td>
-              <td>{$summa_fmt}</td>
-              <td>{$summa_so_fmt}</td>
-              <td>0</td>
+              <td width='7%' style='text-align:center'>{$yil}</td>
+              <td width='15%' style='text-align:center'>{$oyNomi}</td>
+              <td width='30%' style='text-align:center'>{$row['ish_joyi']}</td>
+              <td width='15%' style='text-align:center'>{$summa_fmt}</td>
+              <td width='15%' style='text-align:center'>{$summa_so_fmt}</td>
+              <td width='18%' style='text-align:center'>0</td>
             </tr>";
         }
 
@@ -216,12 +200,12 @@ if ($r && ($row = mysqli_fetch_assoc($r))) {
             $summa_so1_fmt = number_format($summa1q * 0.12, 0, '', ' ');
 
             $inforq .= "<tr style='text-align:center'>
-              <td>{$yil}</td>
-              <td>{$oyNomi}</td>
-              <td>{$row['ish_joyi1']}</td>
-              <td>{$summa1_fmt}</td>
-              <td>{$summa_so1_fmt}</td>
-              <td>0</td>
+              <td width='7%' style='text-align:center'>{$yil}</td>
+              <td width='15%' style='text-align:center'>{$oyNomi}</td>
+              <td width='30%' style='text-align:center'>{$row['ish_joyi1']}</td>
+              <td width='15%' style='text-align:center'>{$summa1_fmt}</td>
+              <td width='15%' style='text-align:center'>{$summa_so1_fmt}</td>
+              <td width='18%' style='text-align:center'>0</td>
             </tr>";
         }
     }
@@ -233,11 +217,10 @@ if ($r && ($row = mysqli_fetch_assoc($r))) {
     $datess  = explode(" ", (string)($row['dates'] ?? ''));
     $datesss = $datess[0] ?? '';
 
-    $qrData = $baseUrl . "/file/download/{$numbers}.pdf";
+    $qrData = $baseUrl . "/file/download/{$numbers}";
     $qrPng  = $tempDirForQr . '/qr_' . md5($qrData) . '.png';
     QRcode::png($qrData, $qrPng);
 
-    $disclaimerEnHtml = nl2br(htmlspecialchars($disclaimerEn, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'));
 
     $infor .= "
     <br><table width='100%' style='margin-top:-20px'>
@@ -309,9 +292,20 @@ if ($r && ($row = mysqli_fetch_assoc($r))) {
 
     <table width='100%' style='font-size:12px;'>
       <tr>
-        <td width='81%' style='text-align:justify; padding-right:22px;font-size:13px'>
-          {$disclaimerEnHtml}
-        </td>
+     <td width='81%' style='text-align:justify; padding-right:22px; font-size:13px;'>
+    
+        This document is a copy of an electronic document generated in accordance with the
+provision on the Single Portal of Interactive Public Services, approved by the provision
+of the Cabinet of Ministers of the Republic of Uzbekistan dated September 15, 2017
+No. 728. To check the accuracy of the information specified in the copy of the
+electronic document, go to the website repo.gov.uz and enter the unique number of the
+electronic document, or scan the QR code using a mobile device. Attention! In
+accordance with the provision of the Cabinet of Ministers of the Republic of Uzbekistan
+dated September 15, 2017 No. 728, the information contained in electronic documents
+is legitimate. It is strictly forbidden for state bodies to refuse to accept copies of
+electronic documents generated on the Single Portal of Interactive Public Services.
+    
+</td>
         <td width='12%' style='font-size:40px; padding-right:15px;'>{$row['q_kod']}</td>
         <td width='8%' style='text-align:right;'>
           <img src='temp/" . basename($qrPng) . "' style='transform: scale(1.3, 1.3);' />
@@ -368,11 +362,11 @@ if ($r2 && ($row2 = mysqli_fetch_assoc($r2))) {
     $datess  = explode(" ", (string)($row2['dates'] ?? ''));
     $datesss2 = $datess[0] ?? '';
 
-    $qrData2 = $baseUrl . "/file/download/{$numbers11}.pdf";
+    $qrData2 = $baseUrl . "/file/download/{$numbers11}";
     $qrPng2  = $tempDirForQr . '/qr_' . md5($qrData2) . '.png';
     QRcode::png($qrData2, $qrPng2);
 
-    $disclaimerRuHtml = nl2br(htmlspecialchars($disclaimerRu, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'));
+   
 
     $infor11 .= "
     <br><table width='100%' style='margin-top:-20px'>
@@ -411,7 +405,7 @@ if ($r2 && ($row2 = mysqli_fetch_assoc($r2))) {
         </td>
         <td width='50%' style='text-align:right'>
           Документ выдан: {$row2['fio']}<br>
-          PПИНФЛ: {$row2['pinfl']}
+          ПИНФЛ: {$row2['pinfl']}
         </td>
       </tr>
     </table>
@@ -467,7 +461,13 @@ if ($r2 && ($row2 = mysqli_fetch_assoc($r2))) {
     <table width='100%' style='font-size:12px;'>
       <tr>
         <td width='81%' style='text-align:justify; padding-right:22px;font-size:13px'>
-          {$disclaimerRuHtml}
+        Данный документ является копией электронного документа, сформированного на
+Едином портале интерактивных государственных услуг в соответствии с
+Постановлением Кабинета Министров № 728 от 15 сентября 2017 года, и отказ
+государственных органов в принятии данного документа категорически
+запрещается. Подлинность документа можно проверить, введя уникальный номер
+документа на сайте repo.gov.uz или просканировав QR-код с помощью мобильного
+телефона.
         </td>
         <td width='12%' style='font-size:40px; padding-right:15px;'>{$row2['q_kod1']}</td>
         <td width='8%' style='text-align:right;'>
@@ -491,7 +491,7 @@ if ($r2 && ($row2 = mysqli_fetch_assoc($r2))) {
 $infor11 .= "</body></html>";
 
 $mpdf1->WriteHTML($infor11);
-$pdfFile2 = $downloadDir . "/" . $numbers11 . ".pdf";
+$pdfFile2 = $downloadDir . "/" . $numbers11. ".pdf";
 $mpdf1->Output($pdfFile2, 'F');
 
 /**
