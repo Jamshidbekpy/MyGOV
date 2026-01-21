@@ -142,6 +142,7 @@ if ($r && ($row = mysqli_fetch_assoc($r))) {
     // ish davrlari 1-ish
     $ib = parse_uz_date($row['ish_b'] ?? '');
     $itRaw = trim((string)($row['ish_t'] ?? ''));
+    
     $itIsCurrent = ($itRaw === '' || $itRaw === 'До сих пор');
     $itDt = $itIsCurrent ? $docDt : (parse_uz_date($itRaw) ?: $docDt);
 
@@ -154,7 +155,7 @@ if ($r && ($row = mysqli_fetch_assoc($r))) {
     // ✅ ANCHOR LOGIKA (0 chiqmasin):
     // Agar ish hujjat sanasidan oldin tugagan bo'lsa -> ish tugagan oydan hisobla
     // Aks holda -> hujjat oydan hisobla
-    $anchorMonth = ($itDt < $docDt) ? month_start($itDt) : $docMonth;
+   $anchorMonth = ($itDt < $docDt) ? month_start($itDt) : $docMonth;
 
     // oy boshiga keltiramiz
     $ibM = $ib ? month_start($ib) : null;
@@ -170,7 +171,7 @@ if ($r && ($row = mysqli_fetch_assoc($r))) {
     $inforq = "";
     $mus = 0.0;
 
-    for ($i = 0; $i < $oy; $i++) {
+    for ($i = 1; $i < $oy; $i++) {
         $m = (clone $anchorMonth)->modify("-$i months");
         $yil = $m->format('Y');
         $oyNomi = $m->format('F');
